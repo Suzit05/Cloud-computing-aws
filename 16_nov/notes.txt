@@ -1,0 +1,100 @@
+1. create a bucket using WSL
+> aws s3 mb s3://my-practise-bucket-nikunj
+
+2. Upload a File to S3 bucket
+> aws s3 cp photo.png s3://my-practise-bucket-nikunj/
+
+3. list the aws s3 buckets
+> aws s3 ls
+
+4. enable hosting
+> S3 > Bucket> Properties > Static Website hosting> enable
+
+5. make an S3 Object Public
+> aws s3api put-object-acl \
+  --bucket my-practise-bucket-nikunj \
+  --key index.html \
+  --acl public-read
+
+6. Create the Bucket Policy for GetObject
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::my-practise-bucket-nikunj/*"
+    }
+  ]
+}
+
+#my-practice-bucket-zitsu
+7. Enable the Versioning
+> aws s3api put-bucket-versioning \
+    --bucket my-practice-bucket-zitsu \
+    --versioning-configuration Status=Enabled
+
+    Check:
+    aws s3api get-bucket-versioning --bucket my-practice-bucket-zitsu
+
+8. Server Side Encryption
+
+> aws s3api put-bucket-encryption \
+    --bucket my-practice-bucket-zitsu \
+    --server-side-encryption-configuration \
+    '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+    
+    check :
+    aws s3api get-bucket-encryption --bucket my-practice-bucket-zitsu
+9. Empty the Bucket
+> aws s3 rm s3://my-practise-bucket-nikunj --recursive
+
+10. delete the bucket
+> aws s3api delete-bucket --bucket my-practise-bucket-nikunj --region us-east-1
+
+note: if it will throw an error:
+step:1 remove all versions:
+--------------------------------
+    aws s3api delete-objects \
+  --bucket my-practise-bucket-nikunj \
+  --delete "$(aws s3api list-object-versions --bucket my-practise-bucket-nikunj \
+  --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
+
+Step:2 Remove all delete markers
+---------------------------------
+aws s3api delete-objects \
+  --bucket my-practise-bucket-nikunj \
+  --delete "$(aws s3api list-object-versions --bucket my-practise-bucket-nikunj \
+  --query '{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
+
+Step:3 Delete the bucket
+--------------------------------
+> aws s3api delete-bucket --bucket my-practise-bucket-nikunj --region us-east-1
+
+
+11. upload large files using multipart
+-------------------------------------------
+Step:1 initial Upload
+> aws s3 create-multipart-upload --bucket my-practise-bucket-nikunj --ket <your_file>.zip
+
+output: UPLOAD_ID
+(Note: Copy This Upload ID For NEXT Step)
+
+Step:2 Upload Parts (min 5 MB each)
+--------------------------------------------
+> aws s3api upload-part \
+    --bucket my-practise-bucket-nikunj \
+    --key bigfile.zip \
+    --part-number 1 \
+    --body part1.zip \
+    --upload-id <UPLOAD_ID>
+
+Step:3 Complete Multipart Upload
+--------------------------------------------
+> aws s3api complete-multipart-upload \
+    --bucket my-practise-bucket-nikunj \
+    --key bigfile.zip \
+    --multipart-upload file://parts.json
+    --upload-id <UPLOAD_ID>
