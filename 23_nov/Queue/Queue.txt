@@ -1,0 +1,62 @@
+Amazon Simple Queue Service (Amazon SQS) is a fully managed message queuing service provided by Amazon Web Services. It lets different parts of an application send, store, and receive messages asynchronously so that systems don’t have to communicate directly at the same time.
+
+
+🧠 Simple Idea
+
+Think of SQS like a post office for software systems:
+One service sends a message (like putting a letter in a mailbox).
+The message sits safely in the queue.
+Another service picks up the message later and processes it.
+
+This helps systems work independently and prevents failures when one service is slow or temporarily down.
+
+
+🧩 Types of SQS Queues--
+
+1️⃣ Standard Queue
+Unlimited throughput
+At-least-once delivery
+Messages may arrive out of order
+
+2️⃣ FIFO Queue (First-In-First-Out)
+Messages delivered in exact order
+Exactly-once processing
+Lower throughput compared to standard
+
+------------------------------------------------------------------------
+Queue 
+|
+|--- Standard Type(Default)
+|
+|---FIFO Queue( First In First Out)
+  #by cli
+(A) Standard Type
+> aws sqs create-queue --queue-name MyStandardQueue
+
+(B) FIFO Type
+--No Order is Preserved |  No Duplicates
+> aws sqs create-queue \
+    --queue-name MyFifoQueue.fifo \
+    --attributes FifoQueue=true,ContentBasedDeduplication=true
+(C) Dead-Letter Queue(DLQ)
+-- if message fials to be processed after attempting X-trials ---> goes to DLQ
+> aws sqs create-queue --queue-name MyDLQ
+
+    Attach to Main Queue
+    ---------------------
+   
+
+Delete A Queue
+-----------------
+> aws sqs list-queues
+
+output:
+{
+    "QueueUrls": [
+        "https://sqs.us-east-1.amazonaws.com/748810634002/MyFifoQueue.fifo",
+        "https://sqs.us-east-1.amazonaws.com/748810634002/MyStandardQueue"
+    ]
+}
+from this list choose the queue you want to Delete
+> aws sqs delete-queue --queue-url  https://eu-north-1.queue.amazonaws.com/084420144166/MyFifoQueue.fifo
+> aws sqs delete-queue --queue-url  https://sqs.us-east-1.amazonaws.com/748810634002/MyStandardQueue
